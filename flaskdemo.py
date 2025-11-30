@@ -19,7 +19,9 @@ def home():
 @app.route('/about')
 def about():
     """About page route."""
-    return "I am still working on this"
+    return render_template("about.html")
+
+
 
 
 @app.route('/search', methods=['POST', 'GET'])
@@ -30,33 +32,33 @@ def search():
         return redirect(url_for('results'))
     return render_template("search.html")
 
-
 @app.route('/results')
 def results():
     """Results page route. Render the search results."""
-    search_term = session['search_term']
+    search_term = session.get('search_term')
+    if not search_term:
+        return redirect(url_for('search'))
+
     page = get_page(search_term)
     return render_template("results.html", page=page)
 
 
+
 def get_page(search_term):
     """Get a Wikipedia page object based on the search term."""
-    # This function is not a route
     try:
         page = wikipedia.page(search_term)
     except wikipedia.exceptions.PageError:
-        # No such page, so return a random one
         page = wikipedia.page(wikipedia.random())
     except wikipedia.exceptions.DisambiguationError:
-        # This is a disambiguation page; get the first real page (close enough)
         page_titles = wikipedia.search(search_term)
-        # Sometimes the next page has the same name (different caps), so don't try the same again
         if page_titles[1].lower() == page_titles[0].lower():
             title = page_titles[2]
         else:
             title = page_titles[1]
-        page = get_page(wikipedia.page(title))
+        page = wikipedia.page(title)
     return page
+
 
 
 if __name__ == '__main__':
